@@ -67,6 +67,9 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
       setInvoiceNumber(`INV-${String(b.invoiceCounter).padStart(4, "0")}`);
     });
     setDate(todayISO());
+    // Client details are per-invoice and never persisted — clear them each open
+    // so a new estimate starts blank and no client's info carries over.
+    setClient({ name: "", address: "", email: "" });
     setServiceAddress("");
     setEditLines(toEditLines(lines));
     setNotesError("");
@@ -77,7 +80,8 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Persist business edits live so they carry to the next invoice.
+  // Persist ONLY the owner's business info (never the client). It carries to the
+  // next invoice; the "Bill to" fields above stay local and reset on each open.
   useEffect(() => {
     if (business) saveBusiness(business);
   }, [business]);

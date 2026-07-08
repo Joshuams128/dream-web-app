@@ -112,8 +112,8 @@ export default function MaterialPicker({
   };
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 sm:p-5">
-      <h2 className="mb-3 text-lg font-semibold text-stone-900">Material / work</h2>
+    <section className="rounded-2xl bg-stone-900 p-4 shadow-sm ring-1 ring-stone-800 sm:p-5">
+      <h2 className="mb-3 text-lg font-semibold text-stone-100">Material / work</h2>
 
       <div ref={boxRef} className="relative">
         <input
@@ -121,23 +121,23 @@ export default function MaterialPicker({
           onChange={(e) => handleType(e.target.value)}
           onFocus={() => setOpen(true)}
           placeholder="e.g. red oak hardwood, vinyl plank, tile install…"
-          className="h-14 w-full rounded-xl border border-stone-300 bg-white px-4 text-base text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+          className="h-14 w-full rounded-xl border border-stone-700 bg-stone-900 px-4 text-base text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
         />
 
         {open && matches.length > 0 && (
-          <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-stone-200 bg-white py-1 shadow-lg">
+          <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-stone-800 bg-stone-900 py-1 shadow-lg">
             {matches.map((m) => (
               <li key={m.id}>
                 <button
                   type="button"
                   onClick={() => pick(m)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left active:bg-amber-50"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left active:bg-stone-800"
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-stone-900">{m.name}</span>
-                    <span className="text-xs text-stone-400">{m.category}</span>
+                    <span className="block truncate text-sm font-medium text-stone-100">{m.name}</span>
+                    <span className="text-xs text-stone-500">{m.category}</span>
                   </span>
-                  <span className="shrink-0 text-xs font-semibold tabular-nums text-stone-500">
+                  <span className="shrink-0 text-xs font-semibold tabular-nums text-stone-400">
                     {fmtRate(m.installedLow)}–{fmtRate(m.installedHigh)}
                   </span>
                 </button>
@@ -148,8 +148,8 @@ export default function MaterialPicker({
       </div>
 
       {showSuggestPrompt && suggest.status === "idle" && (
-        <div className="mt-3 rounded-xl bg-stone-50 p-3 ring-1 ring-stone-200">
-          <p className="text-sm text-stone-600">
+        <div className="mt-3 rounded-xl bg-stone-800 p-3 ring-1 ring-stone-800">
+          <p className="text-sm text-stone-300">
             <span className="font-medium">&ldquo;{trimmed}&rdquo;</span> isn&apos;t in your price list.
           </p>
           <button
@@ -164,14 +164,14 @@ export default function MaterialPicker({
       )}
 
       {suggest.status === "loading" && (
-        <div className="mt-3 flex items-center gap-3 rounded-xl bg-stone-50 p-3 ring-1 ring-stone-200">
+        <div className="mt-3 flex items-center gap-3 rounded-xl bg-stone-800 p-3 ring-1 ring-stone-800">
           <MiniSpinner />
-          <span className="text-sm text-stone-600">Checking Ontario market prices…</span>
+          <span className="text-sm text-stone-300">Checking Ontario market prices…</span>
         </div>
       )}
 
       {suggest.status === "error" && (
-        <div className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-200">
+        <div className="mt-3 rounded-xl bg-red-500/10 p-3 text-sm text-red-300 ring-1 ring-red-500/30">
           {suggest.message}
           <button type="button" onClick={runSuggest} className="ml-2 font-semibold underline">
             Retry
@@ -180,22 +180,22 @@ export default function MaterialPicker({
       )}
 
       {suggest.status === "done" && (
-        <div className="mt-3 rounded-xl bg-indigo-50 p-4 ring-1 ring-indigo-200">
-          <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-700">
+        <div className="mt-3 rounded-xl bg-indigo-500/10 p-4 ring-1 ring-indigo-500/30">
+          <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-300">
             <SparkleIcon />
             Suggested market range — verify before quoting
           </div>
-          <p className="text-2xl font-bold tabular-nums text-indigo-900">
+          <p className="text-2xl font-bold tabular-nums text-indigo-100">
             {fmtRate(suggest.result.low)} – {fmtRate(suggest.result.high)}
-            <span className="text-sm font-normal text-indigo-500"> / sq ft installed</span>
+            <span className="text-sm font-normal text-indigo-400"> / sq ft installed</span>
           </p>
           {suggest.result.notes && (
-            <p className="mt-1 text-sm text-indigo-700">{suggest.result.notes}</p>
+            <p className="mt-1 text-sm text-indigo-300">{suggest.result.notes}</p>
           )}
           {suggest.result.sources.length > 0 && (
             <ul className="mt-2 space-y-0.5">
               {suggest.result.sources.slice(0, 3).map((s) => (
-                <li key={s.url} className="truncate text-xs text-indigo-500">
+                <li key={s.url} className="truncate text-xs text-indigo-400">
                   <a href={s.url} target="_blank" rel="noopener noreferrer" className="underline">
                     {s.title || s.url}
                   </a>
@@ -228,7 +228,7 @@ function SparkleIcon() {
 }
 function MiniSpinner() {
   return (
-    <svg className="h-5 w-5 animate-spin text-indigo-500" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className="h-5 w-5 animate-spin text-indigo-400" viewBox="0 0 24 24" fill="none" aria-hidden>
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4z" />
     </svg>

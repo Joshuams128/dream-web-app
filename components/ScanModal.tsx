@@ -102,14 +102,14 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
-      <div className="flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-xl sm:rounded-3xl">
-        <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-          <h3 className="text-lg font-semibold text-stone-900">Scan measurements</h3>
+      <div className="flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-3xl bg-stone-900 shadow-xl sm:rounded-3xl">
+        <div className="flex items-center justify-between border-b border-stone-800 px-5 py-4">
+          <h3 className="text-lg font-semibold text-stone-100">Scan measurements</h3>
           <button
             type="button"
             onClick={close}
             aria-label="Close"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-stone-400 active:bg-stone-100"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 active:bg-stone-800"
           >
             <CloseIcon />
           </button>
@@ -118,14 +118,14 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
         <div className="overflow-y-auto px-5 py-5">
           {phase === "select" && (
             <div className="text-center">
-              <p className="mb-5 text-sm text-stone-500">
+              <p className="mb-5 text-sm text-stone-400">
                 Take a photo of your handwritten measurements, or upload one from your gallery.
                 Best results with a clear, well-lit shot.
               </p>
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 text-amber-800 active:bg-amber-100"
+                className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-amber-500/40 bg-amber-500/10 text-amber-300 active:bg-amber-500/20"
               >
                 <CameraIcon />
                 <span className="text-base font-semibold">Take / upload photo</span>
@@ -137,7 +137,7 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
                 className="hidden"
                 onChange={(e) => handleFile(e.target.files?.[0])}
               />
-              <p className="mt-4 text-xs text-stone-400">
+              <p className="mt-4 text-xs text-stone-500">
                 Works with iPhone HEIC photos, screenshots, JPG and PNG. Large photos are
                 automatically shrunk before upload.
               </p>
@@ -147,17 +147,17 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
           {phase === "loading" && (
             <div className="flex flex-col items-center justify-center py-14 text-center">
               <Spinner />
-              <p className="mt-4 text-base font-medium text-stone-700">{loadingLabel}</p>
-              <p className="mt-1 text-sm text-stone-400">This usually takes a few seconds.</p>
+              <p className="mt-4 text-base font-medium text-stone-200">{loadingLabel}</p>
+              <p className="mt-1 text-sm text-stone-500">This usually takes a few seconds.</p>
             </div>
           )}
 
           {phase === "error" && (
             <div className="py-6 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15 text-red-400">
                 <AlertIcon />
               </div>
-              <p className="text-sm text-stone-600">{error}</p>
+              <p className="text-sm text-stone-300">{error}</p>
               <div className="mt-6 flex gap-3">
                 <button
                   type="button"
@@ -169,7 +169,7 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
                 <button
                   type="button"
                   onClick={close}
-                  className="h-12 flex-1 rounded-xl bg-stone-100 font-semibold text-stone-700 active:bg-stone-200"
+                  className="h-12 flex-1 rounded-xl bg-stone-800 font-semibold text-stone-200 active:bg-stone-700"
                 >
                   Enter manually
                 </button>
@@ -179,7 +179,7 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
 
           {phase === "review" && (
             <div>
-              <div className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200">
+              <div className="mb-3 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-300 ring-1 ring-amber-500/30">
                 Handwriting scans can misread numbers. Please check each value before confirming.
               </div>
               <ul className="space-y-2">
@@ -192,24 +192,24 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
                         aria-label="Length"
                         value={d.length}
                         onChange={(e) => setDraft(i, "length", e.target.value)}
-                        className="h-12 w-full rounded-lg border border-stone-300 px-2 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                        className="h-12 w-full rounded-lg border border-stone-700 px-2 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       />
-                      <span className="text-stone-400">×</span>
+                      <span className="text-stone-500">×</span>
                       <input
                         inputMode="decimal"
                         aria-label="Width"
                         value={d.width}
                         onChange={(e) => setDraft(i, "width", e.target.value)}
-                        className="h-12 w-full rounded-lg border border-stone-300 px-2 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                        className="h-12 w-full rounded-lg border border-stone-700 px-2 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       />
-                      <span className="w-14 text-right text-xs font-semibold tabular-nums text-stone-500">
+                      <span className="w-14 text-right text-xs font-semibold tabular-nums text-stone-400">
                         {area > 0 ? sqft(area) : "—"}
                       </span>
                       <button
                         type="button"
                         onClick={() => removeDraft(i)}
                         aria-label="Remove"
-                        className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 active:bg-stone-100"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 active:bg-stone-800"
                       >
                         <CloseIcon />
                       </button>
@@ -218,7 +218,7 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
                 })}
               </ul>
               {drafts.length === 0 && (
-                <p className="py-4 text-center text-sm text-stone-400">
+                <p className="py-4 text-center text-sm text-stone-500">
                   All rows removed. Close and enter manually, or try another photo.
                 </p>
               )}
@@ -227,11 +227,11 @@ export default function ScanModal({ open, onClose, onConfirm }: Props) {
         </div>
 
         {phase === "review" && (
-          <div className="flex gap-3 border-t border-stone-200 px-5 py-4">
+          <div className="flex gap-3 border-t border-stone-800 px-5 py-4">
             <button
               type="button"
               onClick={reset}
-              className="h-12 flex-1 rounded-xl bg-stone-100 font-semibold text-stone-700 active:bg-stone-200"
+              className="h-12 flex-1 rounded-xl bg-stone-800 font-semibold text-stone-200 active:bg-stone-700"
             >
               Retake
             </button>

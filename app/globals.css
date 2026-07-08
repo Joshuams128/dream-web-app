@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f5f4; /* stone-100 */
-  --foreground: #1c1917; /* stone-900 */
+  --background: #000000; /* pure black page background */
+  --foreground: #f5f5f4; /* stone-100 */
 }
 
 @theme inline {
@@ -13,8 +13,8 @@
 }
 
 html {
-  /* Keep a consistent light UI — this gets used in bright kitchens & job sites. */
-  color-scheme: light;
+  /* Permanent dark UI. */
+  color-scheme: dark;
 }
 
 body {
@@ -22,6 +22,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Legible placeholder on dark inputs. */
+input::placeholder,
+textarea::placeholder {
+  color: #78716c; /* stone-500 */
 }
 
 /* Hide number-input spinners; we drive numeric entry with inputmode instead. */
@@ -35,7 +41,8 @@ input[type="number"] {
   appearance: textfield;
 }
 
-/* ---- Print / Save-as-PDF: show only the quote summary ---------------------- */
+/* ---- Print / Save-as-PDF: show only the quote summary, forced to light ------
+   The on-screen UI is dark, but a printed quote must be black-on-white paper. */
 @media print {
   body {
     background: #fff;
@@ -48,6 +55,14 @@ input[type="number"] {
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
+  }
+  /* Force everything inside the printed quote back to light. */
+  .print-area,
+  .print-area * {
+    background: #fff !important;
+    color: #1c1917 !important;
+    box-shadow: none !important;
+    --tw-ring-color: transparent !important;
   }
   @page {
     margin: 1.5cm;

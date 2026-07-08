@@ -116,7 +116,7 @@ export default function Home() {
 
   if (!ready) {
     return (
-      <main className="flex min-h-screen items-center justify-center text-stone-400">
+      <main className="flex min-h-screen items-center justify-center text-stone-500">
         Loading…
       </main>
     );
@@ -126,21 +126,21 @@ export default function Home() {
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-16 pt-4">
       <header className="no-print mb-4 flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-stone-900">Dream Build Group</h1>
-          <p className="text-sm text-stone-500">Material price calculator</p>
+          <h1 className="text-xl font-bold tracking-tight text-stone-100">Dream Build Group</h1>
+          <p className="text-sm text-stone-400">Material price calculator</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={newQuote}
-            className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-stone-600 ring-1 ring-stone-200 active:bg-stone-100"
+            className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-stone-300 ring-1 ring-stone-800 active:bg-stone-800"
           >
             New quote
           </button>
           <Link
             href="/settings"
             aria-label="Price list settings"
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-stone-600 ring-1 ring-stone-200 active:bg-stone-100"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-stone-900 text-stone-300 ring-1 ring-stone-800 active:bg-stone-800"
           >
             <GearIcon />
           </Link>
@@ -149,7 +149,7 @@ export default function Home() {
             onClick={signOut}
             aria-label="Sign out"
             title="Sign out"
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-stone-600 ring-1 ring-stone-200 active:bg-stone-100"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-stone-900 text-stone-300 ring-1 ring-stone-800 active:bg-stone-800"
           >
             <SignOutIcon />
           </button>
@@ -175,7 +175,7 @@ export default function Home() {
           <button
             type="button"
             onClick={addSection}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-stone-300 text-sm font-semibold text-stone-600 active:bg-stone-50"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-stone-700 text-sm font-semibold text-stone-300 active:bg-stone-800"
           >
             <PlusIcon />
             Add section (room / area)

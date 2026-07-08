@@ -58,10 +58,10 @@ export default function QuoteSummary({
   };
 
   return (
-    <section className="print-area rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200">
-      <div className="mb-4 border-b border-stone-200 pb-3">
-        <h2 className="text-lg font-semibold text-stone-900">Quote summary</h2>
-        <p className="text-sm text-stone-500">
+    <section className="print-area rounded-2xl bg-stone-900 p-5 shadow-sm ring-1 ring-stone-800">
+      <div className="mb-4 border-b border-stone-800 pb-3">
+        <h2 className="text-lg font-semibold text-stone-100">Quote summary</h2>
+        <p className="text-sm text-stone-400">
           {lines.length} section{lines.length === 1 ? "" : "s"} · {sqft(q.totalSqft)} sq ft total
         </p>
       </div>
@@ -69,14 +69,14 @@ export default function QuoteSummary({
       {/* Per-section breakdown — the math, always visible so the quote is defensible. */}
       <div className="mb-4 space-y-2">
         {lines.map((l) => (
-          <div key={l.id} className="rounded-xl bg-stone-50 px-4 py-3 ring-1 ring-stone-200">
+          <div key={l.id} className="rounded-xl bg-stone-800 px-4 py-3 ring-1 ring-stone-700">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="truncate font-semibold text-stone-900">{l.name}</span>
-              <span className="shrink-0 font-bold tabular-nums text-stone-900">
+              <span className="truncate font-semibold text-stone-100">{l.name}</span>
+              <span className="shrink-0 font-bold tabular-nums text-stone-100">
                 {span(l.subtotalLow, l.subtotalHigh, l.isRange)}
               </span>
             </div>
-            <p className="mt-0.5 text-xs tabular-nums text-stone-500">
+            <p className="mt-0.5 text-xs tabular-nums text-stone-400">
               {l.materialName ? `${l.materialName} · ` : ""}
               {sqft(l.area)} sq ft × {lineRate(l.rateLow, l.rateHigh)}
             </p>
@@ -87,7 +87,7 @@ export default function QuoteSummary({
       {/* Adjustable inputs (hidden when printing). */}
       <div className="no-print mb-4 grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-400">
+          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-500">
             Contingency %
           </span>
           <input
@@ -95,18 +95,18 @@ export default function QuoteSummary({
             value={contingencyPct || ""}
             placeholder="0"
             onChange={(e) => onContingency(pct(e.target.value))}
-            className="h-12 w-full rounded-xl border border-stone-300 px-3 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+            className="h-12 w-full rounded-xl border border-stone-700 px-3 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-400">
+          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-500">
             HST %
           </span>
           <input
             inputMode="decimal"
             value={hstPct}
             onChange={(e) => onHst(pct(e.target.value))}
-            className="h-12 w-full rounded-xl border border-stone-300 px-3 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+            className="h-12 w-full rounded-xl border border-stone-700 px-3 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
           />
         </label>
       </div>
@@ -123,9 +123,9 @@ export default function QuoteSummary({
         <Line label={`HST (${hstPct}%)`} value={span(q.hstLow, q.hstHigh, q.isRange)} />
       </dl>
 
-      <div className="mt-4 flex items-center justify-between border-t border-stone-200 pt-4">
-        <span className="text-base font-semibold text-stone-900">Grand total</span>
-        <span className="text-2xl font-bold tabular-nums text-stone-900">
+      <div className="mt-4 flex items-center justify-between border-t border-stone-800 pt-4">
+        <span className="text-base font-semibold text-stone-100">Grand total</span>
+        <span className="text-2xl font-bold tabular-nums text-stone-100">
           {span(q.grandLow, q.grandHigh, q.isRange)}
         </span>
       </div>
@@ -134,7 +134,7 @@ export default function QuoteSummary({
         <button
           type="button"
           onClick={copy}
-          className="flex h-13 flex-1 items-center justify-center gap-2 rounded-xl bg-stone-900 py-3.5 font-semibold text-white active:bg-stone-700"
+          className="flex h-13 flex-1 items-center justify-center gap-2 rounded-xl bg-stone-100 py-3.5 font-semibold text-stone-900 active:bg-stone-200"
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
           {copied ? "Copied!" : "Copy quote"}
@@ -142,7 +142,7 @@ export default function QuoteSummary({
         <button
           type="button"
           onClick={() => window.print()}
-          className="flex h-13 flex-1 items-center justify-center gap-2 rounded-xl bg-stone-100 py-3.5 font-semibold text-stone-800 active:bg-stone-200"
+          className="flex h-13 flex-1 items-center justify-center gap-2 rounded-xl bg-stone-800 py-3.5 font-semibold text-stone-100 active:bg-stone-700"
         >
           <PrintIcon />
           Print / PDF
@@ -173,8 +173,8 @@ function InvoiceIcon() {
 function Line({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-stone-500">{label}</dt>
-      <dd className="font-medium tabular-nums text-stone-900">{value}</dd>
+      <dt className="text-stone-400">{label}</dt>
+      <dd className="font-medium tabular-nums text-stone-100">{value}</dd>
     </div>
   );
 }

@@ -109,7 +109,7 @@ export default function SettingsPage() {
 
   if (!ready) {
     return (
-      <main className="flex min-h-screen items-center justify-center text-stone-400">Loading…</main>
+      <main className="flex min-h-screen items-center justify-center text-stone-500">Loading…</main>
     );
   }
 
@@ -120,13 +120,13 @@ export default function SettingsPage() {
           <Link
             href="/"
             aria-label="Back to calculator"
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-stone-600 ring-1 ring-stone-200 active:bg-stone-100"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-stone-900 text-stone-300 ring-1 ring-stone-800 active:bg-stone-800"
           >
             <BackIcon />
           </Link>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-stone-900">Price list</h1>
-            <p className="text-sm text-stone-500">Your prices — always used over internet averages</p>
+            <h1 className="text-xl font-bold tracking-tight text-stone-100">Price list</h1>
+            <p className="text-sm text-stone-400">Your prices — always used over internet averages</p>
           </div>
         </div>
       </header>
@@ -142,26 +142,26 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={reset}
-          className="h-12 rounded-xl bg-white px-4 font-semibold text-stone-600 ring-1 ring-stone-200 active:bg-stone-100"
+          className="h-12 rounded-xl bg-stone-900 px-4 font-semibold text-stone-300 ring-1 ring-stone-800 active:bg-stone-800"
         >
           Reset
         </button>
       </div>
 
-      <p className="mb-3 text-xs text-stone-400">
+      <p className="mb-3 text-xs text-stone-500">
         Changes save automatically. Prices are per sq ft in CAD. Leave material cost at 0 for
         labour-only items.
       </p>
 
       <ul className="space-y-3">
         {materials.map((m) => (
-          <li key={m.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
+          <li key={m.id} className="rounded-2xl bg-stone-900 p-4 shadow-sm ring-1 ring-stone-800">
             <div className="mb-2 flex items-center gap-2">
               <input
                 value={m.name}
                 placeholder="Material name"
                 onChange={(e) => update(m.id, "name", e.target.value)}
-                className="min-w-0 flex-1 rounded-lg border border-stone-300 px-3 py-2 text-base font-medium text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                className="min-w-0 flex-1 rounded-lg border border-stone-700 px-3 py-2 text-base font-medium text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
               />
               {/* Auto-price button — shown whenever there is a name */}
               {m.name.trim() && (
@@ -181,7 +181,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => remove(m.id)}
                 aria-label="Delete material"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-stone-400 active:bg-stone-100"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-stone-500 active:bg-stone-800"
               >
                 <TrashIcon />
               </button>
@@ -191,7 +191,7 @@ export default function SettingsPage() {
               value={m.category}
               placeholder="Category"
               onChange={(e) => update(m.id, "category", e.target.value)}
-              className="mb-3 w-full rounded-lg border border-stone-200 px-3 py-1.5 text-sm text-stone-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+              className="mb-3 w-full rounded-lg border border-stone-800 px-3 py-1.5 text-sm text-stone-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
             />
 
             <div className="grid grid-cols-2 gap-3">
@@ -205,14 +205,14 @@ export default function SettingsPage() {
               value={m.notes ?? ""}
               placeholder="Notes (optional)"
               onChange={(e) => update(m.id, "notes", e.target.value)}
-              className="mt-3 w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+              className="mt-3 w-full rounded-lg border border-stone-800 px-3 py-2 text-sm text-stone-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
             />
           </li>
         ))}
       </ul>
 
       {materials.length === 0 && (
-        <p className="py-10 text-center text-sm text-stone-400">
+        <p className="py-10 text-center text-sm text-stone-500">
           No materials yet. Add one, or reset to the default price list.
         </p>
       )}
@@ -231,15 +231,15 @@ function PriceField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-400">{label}</span>
+      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-500">{label}</span>
       <div className="relative">
-        <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-stone-400">$</span>
+        <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-stone-500">$</span>
         <input
           inputMode="decimal"
           value={value || ""}
           placeholder="0.00"
           onChange={(e) => onChange(e.target.value)}
-          className="h-12 w-full rounded-lg border border-stone-300 pr-2 pl-6 text-base tabular-nums text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+          className="h-12 w-full rounded-lg border border-stone-700 pr-2 pl-6 text-base tabular-nums text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
         />
       </div>
     </label>
@@ -248,9 +248,9 @@ function PriceField({
 
 function SourceBadge({ source }: { source: Material["source"] }) {
   const map: Record<Material["source"], { label: string; cls: string }> = {
-    seed: { label: "Seed", cls: "bg-stone-100 text-stone-500" },
-    custom: { label: "Custom", cls: "bg-emerald-100 text-emerald-700" },
-    ai: { label: "AI", cls: "bg-indigo-100 text-indigo-700" },
+    seed: { label: "Seed", cls: "bg-stone-800 text-stone-400" },
+    custom: { label: "Custom", cls: "bg-emerald-500/15 text-emerald-300" },
+    ai: { label: "AI", cls: "bg-indigo-500/15 text-indigo-300" },
   };
   const { label, cls } = map[source];
   return <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${cls}`}>{label}</span>;

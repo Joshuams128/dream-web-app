@@ -64,9 +64,9 @@ export default function SectionCard({
     : fmtRate(section.rateLow);
 
   return (
-    <section className="rounded-3xl bg-stone-100/70 p-3 ring-1 ring-stone-200">
+    <section className="rounded-3xl bg-white/[0.05] p-3 ring-1 ring-stone-800">
       <div className="mb-3 flex items-center gap-2 px-1">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-900 text-xs font-bold text-white">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-stone-950">
           {index + 1}
         </span>
         <input
@@ -74,14 +74,14 @@ export default function SectionCard({
           onChange={(e) => onPatch({ name: e.target.value })}
           placeholder="Room / area name (e.g. Living room)"
           aria-label={`Section ${index + 1} name`}
-          className="h-11 w-full rounded-xl border border-stone-300 bg-white px-3 text-base font-semibold text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+          className="h-11 w-full rounded-xl border border-stone-700 bg-stone-900 px-3 text-base font-semibold text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
         />
         <button
           type="button"
           onClick={onRemove}
           disabled={!canRemove}
           aria-label={`Remove section ${index + 1}`}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 active:bg-stone-200 disabled:opacity-30"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-500 active:bg-stone-700 disabled:opacity-30"
         >
           <TrashIcon />
         </button>
@@ -113,11 +113,11 @@ export default function SectionCard({
         />
       </div>
 
-      <div className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 ring-1 ring-stone-200">
-        <span className="text-sm text-stone-500 tabular-nums">
+      <div className="mt-3 flex items-center justify-between rounded-2xl bg-stone-900 px-4 py-3 ring-1 ring-stone-800">
+        <span className="text-sm text-stone-400 tabular-nums">
           {sqft(area)} sq ft × {rateStr}
         </span>
-        <span className="text-lg font-bold tabular-nums text-stone-900">{subtotal}</span>
+        <span className="text-lg font-bold tabular-nums text-stone-100">{subtotal}</span>
       </div>
     </section>
   );

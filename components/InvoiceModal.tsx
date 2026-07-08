@@ -159,14 +159,14 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
-      <div className="flex max-h-[94vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-xl sm:rounded-3xl">
-        <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-          <h3 className="text-lg font-semibold text-stone-900">Create invoice</h3>
+      <div className="flex max-h-[94vh] w-full max-w-lg flex-col rounded-t-3xl bg-stone-900 shadow-xl sm:rounded-3xl">
+        <div className="flex items-center justify-between border-b border-stone-800 px-5 py-4">
+          <h3 className="text-lg font-semibold text-stone-100">Create invoice</h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-stone-400 active:bg-stone-100"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 active:bg-stone-800"
           >
             <CloseIcon />
           </button>
@@ -190,12 +190,12 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
           <div className="grid grid-cols-2 gap-2">
             <Field label="Invoice #" value={invoiceNumber} onChange={setInvoiceNumber} />
             <label className="block">
-              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-400">Date</span>
+              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-500">Date</span>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="h-11 w-full rounded-lg border border-stone-300 px-3 text-base text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                className="h-11 w-full rounded-lg border border-stone-700 px-3 text-base text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
               />
             </label>
           </div>
@@ -209,45 +209,45 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
 
           {/* Job site */}
           <label className="block">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-400">Job site / service address</span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-500">Job site / service address</span>
             <input
               value={serviceAddress}
               placeholder={business.address || "398 Adelaide St W, Toronto, ON"}
               onChange={(e) => setServiceAddress(e.target.value)}
-              className="h-11 w-full rounded-lg border border-stone-300 px-3 text-base text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+              className="h-11 w-full rounded-lg border border-stone-700 px-3 text-base text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
             />
           </label>
 
           {/* Scope of work — one line per section */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-stone-400">Scope of work</span>
+              <span className="text-xs font-medium uppercase tracking-wide text-stone-500">Scope of work</span>
               {anyRange && (
-                <span className="text-xs text-stone-400">Ranges collapsed to a firm rate — adjust below</span>
+                <span className="text-xs text-stone-500">Ranges collapsed to a firm rate — adjust below</span>
               )}
             </div>
             <ul className="space-y-3">
               {editLines.map((l) => (
-                <li key={l.id} className="rounded-xl bg-stone-50 p-3 ring-1 ring-stone-200">
+                <li key={l.id} className="rounded-xl bg-stone-800 p-3 ring-1 ring-stone-800">
                   <textarea
                     rows={2}
                     value={l.description}
                     onChange={(e) => setLine(l.id, { description: e.target.value })}
-                    className="w-full resize-none rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                    className="w-full resize-none rounded-lg border border-stone-700 px-3 py-2 text-sm text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                   />
                   <div className="mt-2 flex items-center justify-between gap-3">
-                    <span className="text-xs text-stone-500 tabular-nums">{fmtSqft(l.area)} sq ft</span>
+                    <span className="text-xs text-stone-400 tabular-nums">{fmtSqft(l.area)} sq ft</span>
                     <label className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-stone-500">Rate $/sq ft</span>
+                      <span className="text-xs font-medium text-stone-400">Rate $/sq ft</span>
                       <input
                         inputMode="decimal"
                         value={l.rate || ""}
                         placeholder="0.00"
                         onChange={(e) => setLine(l.id, { rate: rateNum(e.target.value) })}
-                        className="h-10 w-24 rounded-lg border border-stone-300 px-2 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                        className="h-10 w-24 rounded-lg border border-stone-700 px-2 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       />
                     </label>
-                    <span className="w-24 text-right text-sm font-semibold tabular-nums text-stone-900">
+                    <span className="w-24 text-right text-sm font-semibold tabular-nums text-stone-100">
                       {money(lineAmount(l))}
                     </span>
                   </div>
@@ -259,7 +259,7 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
           {/* Notes & Disclaimer */}
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-stone-400">Notes &amp; Disclaimer</span>
+              <span className="text-xs font-medium uppercase tracking-wide text-stone-500">Notes &amp; Disclaimer</span>
               <button
                 type="button"
                 onClick={generateNotes}
@@ -275,21 +275,21 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
               value={notes}
               placeholder="Notes and disclaimer text printed at the bottom of the estimate…"
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+              className="w-full rounded-lg border border-stone-700 px-3 py-2 text-sm text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
             />
             {notesError && <p className="mt-1 text-xs text-red-600">{notesError}</p>}
           </div>
 
           {/* Totals */}
-          <div className="rounded-xl bg-stone-50 p-4 ring-1 ring-stone-200">
-            <p className="mb-3 text-sm text-stone-500">
+          <div className="rounded-xl bg-stone-800 p-4 ring-1 ring-stone-800">
+            <p className="mb-3 text-sm text-stone-400">
               {editLines.length} line{editLines.length === 1 ? "" : "s"} · {fmtSqft(totalSqft)} sq ft total
             </p>
             <dl className="space-y-1 text-sm">
               <Line label="Subtotal" value={money(t.subtotal)} />
               {contingencyPct > 0 && <Line label={`Contingency (${contingencyPct}%)`} value={money(t.contingency)} />}
               <Line label={`HST (${hstPct}%)`} value={money(t.hst)} />
-              <div className="flex items-center justify-between border-t border-stone-200 pt-2 text-base font-bold text-stone-900">
+              <div className="flex items-center justify-between border-t border-stone-800 pt-2 text-base font-bold text-stone-100">
                 <dt>Total</dt>
                 <dd className="tabular-nums">{money(t.total)}</dd>
               </div>
@@ -297,12 +297,12 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
           </div>
         </div>
 
-        <div className="border-t border-stone-200 px-5 py-4">
+        <div className="border-t border-stone-800 px-5 py-4">
           <button
             type="button"
             onClick={exportPdf}
             disabled={exporting}
-            className="flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-stone-900 py-3.5 font-semibold text-white active:bg-stone-700 disabled:opacity-60"
+            className="flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-stone-100 py-3.5 font-semibold text-stone-900 active:bg-stone-200 disabled:opacity-60"
           >
             <DownloadIcon />
             {exporting ? "Preparing PDF…" : "Export invoice PDF"}
@@ -316,7 +316,7 @@ export default function InvoiceModal({ open, onClose, lines, contingencyPct, hst
 function Fieldset({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-stone-400">{title}</legend>
+      <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-stone-500">{title}</legend>
       {children}
     </fieldset>
   );
@@ -333,11 +333,11 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-400">{label}</span>
+      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-500">{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-lg border border-stone-300 px-3 text-base text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+        className="h-11 w-full rounded-lg border border-stone-700 px-3 text-base text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
       />
     </label>
   );
@@ -346,8 +346,8 @@ function Field({
 function Line({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-stone-500">{label}</dt>
-      <dd className="font-medium tabular-nums text-stone-900">{value}</dd>
+      <dt className="text-stone-400">{label}</dt>
+      <dd className="font-medium tabular-nums text-stone-100">{value}</dd>
     </div>
   );
 }

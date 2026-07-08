@@ -35,13 +35,13 @@ export default function MeasurementRows({ rows, onChange, onScanClick }: Props) 
   const total = totalSqft(rows);
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 sm:p-5">
+    <section className="rounded-2xl bg-stone-900 p-4 shadow-sm ring-1 ring-stone-800 sm:p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-stone-900">Measurements</h2>
+        <h2 className="text-lg font-semibold text-stone-100">Measurements</h2>
         <button
           type="button"
           onClick={onScanClick}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-800 ring-1 ring-amber-200 active:bg-amber-200"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/15 px-3 py-2 text-sm font-semibold text-amber-300 ring-1 ring-amber-500/30 active:bg-amber-500/25"
         >
           <CameraIcon />
           Scan from photo
@@ -49,7 +49,7 @@ export default function MeasurementRows({ rows, onChange, onScanClick }: Props) 
       </div>
 
       {/* Column labels (hidden on the very narrow layout) */}
-      <div className="mb-1 hidden grid-cols-[1fr_auto_1fr_auto_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-stone-400 sm:grid">
+      <div className="mb-1 hidden grid-cols-[1fr_auto_1fr_auto_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-stone-500 sm:grid">
         <span>Length (ft)</span>
         <span />
         <span>Width (ft)</span>
@@ -72,9 +72,9 @@ export default function MeasurementRows({ rows, onChange, onScanClick }: Props) 
                 aria-label="Length in feet"
                 value={row.length}
                 onChange={(e) => update(row.id, "length", e.target.value)}
-                className="h-14 w-full rounded-xl border border-stone-300 bg-white px-3 text-center text-lg tabular-nums text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                className="h-14 w-full rounded-xl border border-stone-700 bg-stone-900 px-3 text-center text-lg tabular-nums text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
               />
-              <span className="text-lg font-medium text-stone-400">×</span>
+              <span className="text-lg font-medium text-stone-500">×</span>
               <input
                 inputMode="decimal"
                 enterKeyHint="next"
@@ -82,16 +82,16 @@ export default function MeasurementRows({ rows, onChange, onScanClick }: Props) 
                 aria-label="Width in feet"
                 value={row.width}
                 onChange={(e) => update(row.id, "width", e.target.value)}
-                className="h-14 w-full rounded-xl border border-stone-300 bg-white px-3 text-center text-lg tabular-nums text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                className="h-14 w-full rounded-xl border border-stone-700 bg-stone-900 px-3 text-center text-lg tabular-nums text-stone-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
               />
-              <span className="w-16 text-right text-sm font-semibold tabular-nums text-stone-600">
+              <span className="w-16 text-right text-sm font-semibold tabular-nums text-stone-300">
                 {area > 0 ? sqft(area) : "—"}
               </span>
               <button
                 type="button"
                 onClick={() => remove(row.id)}
                 aria-label="Remove row"
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-stone-400 active:bg-stone-100"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-stone-500 active:bg-stone-800"
               >
                 <TrashIcon />
               </button>
@@ -103,16 +103,16 @@ export default function MeasurementRows({ rows, onChange, onScanClick }: Props) 
       <button
         type="button"
         onClick={add}
-        className="mt-3 flex h-12 w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-stone-300 text-sm font-semibold text-stone-500 active:bg-stone-50"
+        className="mt-3 flex h-12 w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-stone-700 text-sm font-semibold text-stone-400 active:bg-stone-800"
       >
         <PlusIcon />
         Add measurement
       </button>
 
-      <div className="mt-4 flex items-center justify-between rounded-xl bg-stone-900 px-4 py-3 text-white">
-        <span className="text-sm font-medium text-stone-300">Total area</span>
+      <div className="mt-4 flex items-center justify-between rounded-xl bg-amber-500 px-4 py-3 text-stone-950">
+        <span className="text-sm font-medium text-stone-900/70">Total area</span>
         <span className="text-2xl font-bold tabular-nums">
-          {sqft(total)} <span className="text-base font-normal text-stone-400">sq ft</span>
+          {sqft(total)} <span className="text-base font-normal text-stone-900/60">sq ft</span>
         </span>
       </div>
     </section>

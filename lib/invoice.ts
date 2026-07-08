@@ -1,6 +1,14 @@
 import type { BusinessInfo, ClientInfo } from "./types";
 import { money, sqft as fmtSqft } from "./format";
 
+/** One scope-of-work line on the invoice — typically one per section. */
+export interface InvoiceLine {
+  /** What the work is, e.g. "Living room — Red oak hardwood". */
+  description: string;
+  area: number;
+  rate: number; // firm per-sq-ft rate for this line
+}
+
 export interface InvoiceData {
   business: BusinessInfo;
   client: ClientInfo;
@@ -8,12 +16,9 @@ export interface InvoiceData {
   serviceAddress: string;
   invoiceNumber: string;
   dateLabel: string;
-  materialName: string;
-  description: string;
+  lines: InvoiceLine[];
   /** Notes & disclaimer text printed at the bottom of the PDF. */
   notes: string;
-  totalSqft: number;
-  rate: number; // firm per-sq-ft rate for the invoice
   contingencyPct: number;
   hstPct: number;
 }
@@ -25,14 +30,18 @@ export interface InvoiceTotals {
   total: number;
 }
 
-/** Firm (single-value) totals for an invoice. */
+/** Amount for a single line: area × rate. */
+export function lineAmount(line: InvoiceLine): number {
+  return line.area * line.rate;
+}
+
+/** Firm (single-value) totals for an invoice, summed across every line. */
 export function invoiceTotals(
-  totalSqft: number,
-  rate: number,
+  lines: InvoiceLine[],
   contingencyPct: number,
   hstPct: number,
 ): InvoiceTotals {
-  const subtotal = totalSqft * rate;
+  const subtotal = lines.reduce((sum, l) => sum + lineAmount(l), 0);
   const contingency = subtotal * (contingencyPct / 100);
   const base = subtotal + contingency;
   const hst = base * (hstPct / 100);
@@ -181,14 +190,18 @@ export async function exportInvoicePdf(data: InvoiceData): Promise<void> {
   boldText("SCOPE OF WORK", L, scopeY);
 
   // ── Line items table ──────────────────────────────────────────────────────
-  const t = invoiceTotals(data.totalSqft, data.rate, data.contingencyPct, data.hstPct);
-  const itemDesc = data.description || data.materialName || "Work";
-  const qtyStr = `${fmtSqft(data.totalSqft)} sq ft @ ${money(data.rate)}/sq ft`;
+  const t = invoiceTotals(data.lines, data.contingencyPct, data.hstPct);
+  const body = data.lines.map((l, i) => [
+    i + 1,
+    l.description || "Work",
+    `${fmtSqft(l.area)} sq ft @ ${money(l.rate)}/sq ft`,
+    money(lineAmount(l)),
+  ]);
 
   autoTable(doc, {
     startY: scopeY + 4,
     head: [["ITEM", "Description", "Quantity", "Amount"]],
-    body: [[1, itemDesc, qtyStr, money(t.subtotal)]],
+    body,
     theme: "plain",
     headStyles: {
       fillColor: [238, 233, 227],

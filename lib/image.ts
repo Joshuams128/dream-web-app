@@ -41,12 +41,28 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+/** Decode a blob to an <img> for canvas work, or null if the browser can't. */
+async function tryDecode(blob: Blob): Promise<HTMLImageElement | null> {
+  try {
+    return await loadImage(await readAsDataUrl(blob));
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Prepare an uploaded file for the extraction API:
- *  1. If it's a HEIC/HEIF photo, convert it to JPEG in-browser (heic2any).
- *  2. Downscale to <= 2000px on the long edge and re-encode as JPEG (~0.85).
- * Returns base64 + media type ready to POST. Falls back gracefully if the
- * browser can't decode the image for canvas re-encoding.
+ * Prepare an uploaded file for the extraction API and always hand back a
+ * JPEG the API accepts:
+ *
+ *  1. Try to decode the file directly. Most browsers do this natively and
+ *     instantly — including iOS Safari for HEIC — so iPhone photos need no
+ *     conversion at all.
+ *  2. Only if that fails and the file is HEIC/HEIF, fall back to the slower
+ *     JS decoder (heic2any) to turn it into JPEG, then decode that.
+ *  3. Downscale to <= 2000px on the long edge and re-encode as JPEG (~0.85),
+ *     which also keeps the upload small so it goes through quickly.
+ *
+ * Falls back to sending the raw bytes only if nothing can decode the image.
  */
 export async function prepareImage(
   file: File,
@@ -54,25 +70,32 @@ export async function prepareImage(
 ): Promise<PreparedImage> {
   let blob: Blob = file;
 
-  if (isHeic(file)) {
+  // Fast path: let the browser decode it (native HEIC support on iOS Safari).
+  let img = await tryDecode(blob);
+
+  // Slow path: browser can't read this HEIC/HEIF — convert it in JS.
+  if (!img && isHeic(file)) {
     onStage?.("converting");
-    const heic2any = (await import("heic2any")).default;
-    const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
-    blob = Array.isArray(converted) ? converted[0] : converted;
+    try {
+      const heic2any = (await import("heic2any")).default;
+      const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
+      blob = Array.isArray(converted) ? converted[0] : converted;
+      img = await tryDecode(blob);
+    } catch {
+      // Conversion failed outright — handled by the raw-bytes fallback below.
+    }
+  }
+
+  if (!img) {
+    // Couldn't decode for canvas re-encoding. Send the best bytes we have; a
+    // successful HEIC conversion above means `blob` is already JPEG.
+    const dataUrl = await readAsDataUrl(blob);
+    const converted = blob !== file; // true once heic2any produced a JPEG
+    const mediaType = converted ? "image/jpeg" : blob.type || "image/jpeg";
+    return { base64: dataUrl.split(",")[1] ?? "", mediaType };
   }
 
   onStage?.("compressing");
-  const dataUrl = await readAsDataUrl(blob);
-
-  let img: HTMLImageElement;
-  try {
-    img = await loadImage(dataUrl);
-  } catch {
-    // Browser couldn't decode it for canvas — send the (already-converted)
-    // bytes as-is. Any remaining unsupported type is caught by the server.
-    return { base64: dataUrl.split(",")[1] ?? "", mediaType: blob.type || "image/jpeg" };
-  }
-
   const scale = Math.min(1, MAX_EDGE / Math.max(img.width, img.height));
   const w = Math.max(1, Math.round(img.width * scale));
   const h = Math.max(1, Math.round(img.height * scale));
@@ -81,7 +104,11 @@ export async function prepareImage(
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return { base64: dataUrl.split(",")[1] ?? "", mediaType: blob.type || "image/jpeg" };
+  if (!ctx) {
+    const dataUrl = await readAsDataUrl(blob);
+    const mediaType = blob !== file ? "image/jpeg" : blob.type || "image/jpeg";
+    return { base64: dataUrl.split(",")[1] ?? "", mediaType };
+  }
 
   ctx.drawImage(img, 0, 0, w, h);
   const jpeg = canvas.toDataURL("image/jpeg", 0.85);

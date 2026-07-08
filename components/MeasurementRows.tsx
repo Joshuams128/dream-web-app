@@ -106,7 +106,7 @@ export default function MeasurementRows({ rows, onChange, onScanClick }: Props) 
         className="mt-3 flex h-12 w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-stone-300 text-sm font-semibold text-stone-500 active:bg-stone-50"
       >
         <PlusIcon />
-        Add room / area
+        Add measurement
       </button>
 
       <div className="mt-4 flex items-center justify-between rounded-xl bg-stone-900 px-4 py-3 text-white">

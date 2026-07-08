@@ -1,4 +1,4 @@
-import type { Material, SessionState, BusinessInfo } from "./types";
+import type { Material, Section, SessionState, BusinessInfo } from "./types";
 import { seedMaterials } from "./seed";
 
 /**
@@ -74,8 +74,46 @@ export async function resetMaterials(): Promise<Material[]> {
 
 // ---- Session ---------------------------------------------------------------
 
+/**
+ * The shape saved before multi-section support: a single flat set of rows,
+ * material, and rate. Kept only so old localStorage data can be migrated.
+ */
+interface LegacySession {
+  rows?: Section["rows"];
+  materialId?: string | null;
+  customMaterialName?: string;
+  rateBasis?: Section["rateBasis"];
+  rateLow?: number;
+  rateHigh?: number;
+  contingencyPct?: number;
+  hstPct?: number;
+}
+
+/** Fold a pre-sections session into a one-section SessionState. */
+function migrateSession(raw: SessionState & LegacySession): SessionState {
+  if (Array.isArray(raw.sections)) return raw; // already current shape
+  const legacy = raw as LegacySession;
+  return {
+    sections: [
+      {
+        id: newId("sec"),
+        name: "",
+        rows: legacy.rows ?? [],
+        materialId: legacy.materialId ?? null,
+        customMaterialName: legacy.customMaterialName ?? "",
+        rateBasis: legacy.rateBasis ?? "installed",
+        rateLow: legacy.rateLow ?? 0,
+        rateHigh: legacy.rateHigh ?? 0,
+      },
+    ],
+    contingencyPct: legacy.contingencyPct ?? 0,
+    hstPct: legacy.hstPct ?? 13,
+  };
+}
+
 export async function getSession(): Promise<SessionState | null> {
-  return read<SessionState>(SESSION_KEY);
+  const raw = read<SessionState & LegacySession>(SESSION_KEY);
+  return raw ? migrateSession(raw) : null;
 }
 
 export async function saveSession(session: SessionState): Promise<void> {

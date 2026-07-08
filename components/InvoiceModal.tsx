@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from "react";
 import type { BusinessInfo, ClientInfo } from "@/lib/types";
+import type { SectionLine } from "@/lib/quote";
 import { getBusiness, saveBusiness } from "@/lib/store";
-import { exportInvoicePdf, invoiceTotals } from "@/lib/invoice";
+import { exportInvoicePdf, invoiceTotals, lineAmount, type InvoiceLine } from "@/lib/invoice";
 import { money, sqft as fmtSqft } from "@/lib/format";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  materialName: string;
-  totalSqft: number;
-  rateLow: number;
-  rateHigh: number;
+  lines: SectionLine[];
   contingencyPct: number;
   hstPct: number;
+}
+
+/** Editable scope line: an InvoiceLine plus a stable key for the list. */
+interface EditLine extends InvoiceLine {
+  id: string;
 }
 
 function todayISO(): string {
@@ -29,34 +32,32 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("en-CA", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export default function InvoiceModal({
-  open,
-  onClose,
-  materialName,
-  totalSqft,
-  rateLow,
-  rateHigh,
-  contingencyPct,
-  hstPct,
-}: Props) {
+/** Turn each priced section into a firm (single-rate) invoice line. */
+function toEditLines(lines: SectionLine[]): EditLine[] {
+  return lines.map((l) => ({
+    id: l.id,
+    description: l.materialName ? `${l.name} — ${l.materialName}` : l.name,
+    area: l.area,
+    rate: l.rateHigh > 0 ? l.rateHigh : l.rateLow,
+  }));
+}
+
+export default function InvoiceModal({ open, onClose, lines, contingencyPct, hstPct }: Props) {
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [client, setClient] = useState<ClientInfo>({ name: "", address: "", email: "" });
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [date, setDate] = useState(todayISO());
-  const [description, setDescription] = useState("");
-  const [finalRate, setFinalRate] = useState(0);
+  const [editLines, setEditLines] = useState<EditLine[]>([]);
   const [serviceAddress, setServiceAddress] = useState("");
   const [notes, setNotes] = useState("");
-  const [generating, setGenerating] = useState(false);
   const [generatingNotes, setGeneratingNotes] = useState(false);
-  const [descError, setDescError] = useState("");
   const [notesError, setNotesError] = useState("");
   const [exporting, setExporting] = useState(false);
 
   const DEFAULT_NOTES =
     "This estimate is based on current site conditions as observed. Additional costs may apply if unforeseen conditions are discovered during construction (e.g., structural issues, code violations, hidden damage, or hazardous materials). Changes or additions to the scope of work requested by the customer will be quoted separately and require written approval before proceeding.";
 
-  // Initialise from persisted business info each time the modal opens.
+  // Initialise from persisted business info + the current quote each time the modal opens.
   useEffect(() => {
     if (!open) return;
     let active = true;
@@ -67,12 +68,9 @@ export default function InvoiceModal({
     });
     setDate(todayISO());
     setServiceAddress("");
-    setFinalRate(rateHigh > 0 ? rateHigh : rateLow);
-    setDescError("");
+    setEditLines(toEditLines(lines));
     setNotesError("");
-    setNotes(
-      "This estimate is based on current site conditions as observed. Additional costs may apply if unforeseen conditions are discovered during construction (e.g., structural issues, code violations, hidden damage, or hazardous materials). Changes or additions to the scope of work requested by the customer will be quoted separately and require written approval before proceeding."
-    );
+    setNotes(DEFAULT_NOTES);
     return () => {
       active = false;
     };
@@ -92,52 +90,34 @@ export default function InvoiceModal({
     ) : null;
   }
 
-  const t = invoiceTotals(totalSqft, finalRate, contingencyPct, hstPct);
+  const t = invoiceTotals(editLines, contingencyPct, hstPct);
+  const totalSqft = editLines.reduce((sum, l) => sum + l.area, 0);
+  const materialsLabel =
+    lines.map((l) => l.materialName).filter(Boolean).join(", ") || "the work";
+  const anyRange = lines.some((l) => l.isRange);
+
   const setBiz = (field: keyof BusinessInfo, value: string) =>
     setBusiness((b) => (b ? { ...b, [field]: value } : b));
   const rateNum = (v: string) => {
     const n = parseFloat(v.replace(/[^0-9.]/g, ""));
     return Number.isFinite(n) && n >= 0 ? n : 0;
   };
-
-  const generate = async () => {
-    if (!materialName) {
-      setDescError("Pick a material on the calculator first.");
-      return;
-    }
-    setGenerating(true);
-    setDescError("");
-    try {
-      const res = await fetch("/api/describe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ material: materialName, sqft: totalSqft, type: "description" }),
-      });
-      const data: { description?: string; error?: string } = await res.json();
-      if (!res.ok || !data.description) {
-        setDescError(data.error ?? "Couldn't generate a description.");
-        return;
-      }
-      setDescription(data.description);
-    } catch {
-      setDescError("Couldn't reach the server. Type a description instead.");
-    } finally {
-      setGenerating(false);
-    }
-  };
+  const setLine = (id: string, patch: Partial<EditLine>) =>
+    setEditLines((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l)));
 
   const generateNotes = async () => {
-    if (!materialName) {
-      setNotesError("Pick a material on the calculator first.");
-      return;
-    }
     setGeneratingNotes(true);
     setNotesError("");
     try {
       const res = await fetch("/api/describe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ material: materialName, sqft: totalSqft, description, type: "notes" }),
+        body: JSON.stringify({
+          material: materialsLabel,
+          sqft: totalSqft,
+          description: editLines.map((l) => l.description).join("; "),
+          type: "notes",
+        }),
       });
       const payload: { notes?: string; error?: string } = await res.json();
       if (!res.ok || !payload.notes) {
@@ -161,11 +141,8 @@ export default function InvoiceModal({
         serviceAddress,
         invoiceNumber,
         dateLabel: formatDate(date),
-        materialName,
-        description,
+        lines: editLines.map(({ description, area, rate }) => ({ description, area, rate })),
         notes,
-        totalSqft,
-        rate: finalRate,
         contingencyPct,
         hstPct,
       });
@@ -237,30 +214,42 @@ export default function InvoiceModal({
             />
           </label>
 
-          {/* Line item description */}
+          {/* Scope of work — one line per section */}
           <div>
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-stone-400">
-                Description
-              </span>
-              <button
-                type="button"
-                onClick={generate}
-                disabled={generating}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white active:bg-indigo-700 disabled:opacity-50"
-              >
-                {generating ? <MiniSpinner /> : <SparkleIcon />}
-                {generating ? "Writing…" : "Auto-write"}
-              </button>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-medium uppercase tracking-wide text-stone-400">Scope of work</span>
+              {anyRange && (
+                <span className="text-xs text-stone-400">Ranges collapsed to a firm rate — adjust below</span>
+              )}
             </div>
-            <textarea
-              rows={3}
-              value={description}
-              placeholder={materialName ? `e.g. Supply and installation of ${materialName}…` : "Describe the work…"}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-            />
-            {descError && <p className="mt-1 text-xs text-red-600">{descError}</p>}
+            <ul className="space-y-3">
+              {editLines.map((l) => (
+                <li key={l.id} className="rounded-xl bg-stone-50 p-3 ring-1 ring-stone-200">
+                  <textarea
+                    rows={2}
+                    value={l.description}
+                    onChange={(e) => setLine(l.id, { description: e.target.value })}
+                    className="w-full resize-none rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                  />
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <span className="text-xs text-stone-500 tabular-nums">{fmtSqft(l.area)} sq ft</span>
+                    <label className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-stone-500">Rate $/sq ft</span>
+                      <input
+                        inputMode="decimal"
+                        value={l.rate || ""}
+                        placeholder="0.00"
+                        onChange={(e) => setLine(l.id, { rate: rateNum(e.target.value) })}
+                        className="h-10 w-24 rounded-lg border border-stone-300 px-2 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                      />
+                    </label>
+                    <span className="w-24 text-right text-sm font-semibold tabular-nums text-stone-900">
+                      {money(lineAmount(l))}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Notes & Disclaimer */}
@@ -287,29 +276,11 @@ export default function InvoiceModal({
             {notesError && <p className="mt-1 text-xs text-red-600">{notesError}</p>}
           </div>
 
-          {/* Firm rate + totals */}
+          {/* Totals */}
           <div className="rounded-xl bg-stone-50 p-4 ring-1 ring-stone-200">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <span className="text-sm text-stone-500">
-                {fmtSqft(totalSqft)} sq ft · {materialName || "no material"}
-              </span>
-              <label className="flex items-center gap-2">
-                <span className="text-xs font-medium text-stone-500">Rate $/sq ft</span>
-                <input
-                  inputMode="decimal"
-                  value={finalRate || ""}
-                  placeholder="0.00"
-                  onChange={(e) => setFinalRate(rateNum(e.target.value))}
-                  className="h-10 w-24 rounded-lg border border-stone-300 px-2 text-center text-base tabular-nums focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                />
-              </label>
-            </div>
-            {rateLow !== rateHigh && (
-              <p className="mb-2 text-xs text-stone-400">
-                Your quote was a range ({money(rateLow)}–{money(rateHigh)}/sq ft). An invoice needs one
-                firm rate — adjust above.
-              </p>
-            )}
+            <p className="mb-3 text-sm text-stone-500">
+              {editLines.length} line{editLines.length === 1 ? "" : "s"} · {fmtSqft(totalSqft)} sq ft total
+            </p>
             <dl className="space-y-1 text-sm">
               <Line label="Subtotal" value={money(t.subtotal)} />
               {contingencyPct > 0 && <Line label={`Contingency (${contingencyPct}%)`} value={money(t.contingency)} />}

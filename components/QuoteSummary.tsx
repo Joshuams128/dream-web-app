@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { MeasurementRow } from "@/lib/types";
+import type { SectionLine } from "@/lib/quote";
 import { computeQuote, quoteText } from "@/lib/quote";
 import { money, sqft, rate as fmtRate } from "@/lib/format";
 
 interface Props {
-  materialName: string;
-  rows: MeasurementRow[];
-  rateLow: number;
-  rateHigh: number;
+  lines: SectionLine[];
   contingencyPct: number;
   hstPct: number;
   onContingency: (n: number) => void;
@@ -26,11 +23,12 @@ function span(low: number, high: number, isRange: boolean): string {
   return isRange ? `${money(low)} – ${money(high)}` : money(low);
 }
 
+function lineRate(low: number, high: number): string {
+  return Math.abs(high - low) > 1e-9 ? `${fmtRate(low)}–${fmtRate(high)}` : fmtRate(low);
+}
+
 export default function QuoteSummary({
-  materialName,
-  rows,
-  rateLow,
-  rateHigh,
+  lines,
   contingencyPct,
   hstPct,
   onContingency,
@@ -38,11 +36,10 @@ export default function QuoteSummary({
   onCreateInvoice,
 }: Props) {
   const [copied, setCopied] = useState(false);
-  const q = computeQuote(rows, rateLow, rateHigh, contingencyPct, hstPct);
-  const rateStr = q.isRange ? `${fmtRate(q.rateLow)}–${fmtRate(q.rateHigh)}` : fmtRate(q.rateLow);
+  const q = computeQuote(lines, contingencyPct, hstPct);
 
   const copy = async () => {
-    const text = quoteText(materialName, q, contingencyPct, hstPct);
+    const text = quoteText(lines, q, contingencyPct, hstPct);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -65,15 +62,26 @@ export default function QuoteSummary({
       <div className="mb-4 border-b border-stone-200 pb-3">
         <h2 className="text-lg font-semibold text-stone-900">Quote summary</h2>
         <p className="text-sm text-stone-500">
-          {materialName || "No material selected"}
+          {lines.length} section{lines.length === 1 ? "" : "s"} · {sqft(q.totalSqft)} sq ft total
         </p>
       </div>
 
-      {/* The math, always visible so the quote is defensible. */}
-      <div className="mb-4 rounded-xl bg-stone-50 px-4 py-3 ring-1 ring-stone-200">
-        <p className="text-center text-sm font-medium tabular-nums text-stone-700 sm:text-base">
-          {sqft(q.totalSqft)} sq ft × {rateStr} = {span(q.subtotalLow, q.subtotalHigh, q.isRange)}
-        </p>
+      {/* Per-section breakdown — the math, always visible so the quote is defensible. */}
+      <div className="mb-4 space-y-2">
+        {lines.map((l) => (
+          <div key={l.id} className="rounded-xl bg-stone-50 px-4 py-3 ring-1 ring-stone-200">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="truncate font-semibold text-stone-900">{l.name}</span>
+              <span className="shrink-0 font-bold tabular-nums text-stone-900">
+                {span(l.subtotalLow, l.subtotalHigh, l.isRange)}
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs tabular-nums text-stone-500">
+              {l.materialName ? `${l.materialName} · ` : ""}
+              {sqft(l.area)} sq ft × {lineRate(l.rateLow, l.rateHigh)}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Adjustable inputs (hidden when printing). */}
@@ -105,7 +113,6 @@ export default function QuoteSummary({
 
       <dl className="space-y-2 text-sm">
         <Line label="Total area" value={`${sqft(q.totalSqft)} sq ft`} />
-        <Line label="Rate / sq ft" value={rateStr} />
         <Line label="Subtotal" value={span(q.subtotalLow, q.subtotalHigh, q.isRange)} />
         {contingencyPct > 0 && (
           <Line

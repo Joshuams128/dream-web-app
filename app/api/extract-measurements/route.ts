@@ -7,9 +7,10 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const ACCEPTED_MEDIA = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-// The client downscales/compresses before upload, so payloads are small; this
-// is a generous backstop against a runaway request.
-const MAX_BYTES = 8 * 1024 * 1024;
+// The client downscales/compresses before upload, so real payloads are small
+// (a few hundred KB). This cap is only a backstop against a runaway request,
+// so it's set high enough that full-size phone photos never get rejected.
+const MAX_BYTES = 30 * 1024 * 1024;
 
 const PROMPT = `Extract all length × width measurements from this handwritten note. The measurements are room dimensions in feet, written like "16.5 x 11" or "29X17". Return ONLY a JSON array of objects: [{"length": 16.5, "width": 11}]. Ignore totals, prices, and any text that isn't a dimension pair. If there are no measurements, return [].`;
 

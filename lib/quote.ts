@@ -1,4 +1,4 @@
-import type { MeasurementRow } from "./types";
+import type { MeasurementRow, Section } from "./types";
 import { money, sqft, rate as fmtRate, toNumber } from "./format";
 
 /** Square footage of a single row (length x width), 0 if either is blank. */
@@ -11,10 +11,54 @@ export function totalSqft(rows: MeasurementRow[]): number {
   return rows.reduce((sum, r) => sum + rowSqft(r), 0);
 }
 
-export interface QuoteTotals {
-  totalSqft: number;
+/** A section priced on its own: area x rate, before job-wide contingency/HST. */
+export interface SectionLine {
+  id: string;
+  /** Display name, falling back to "Section N" when the user left it blank. */
+  name: string;
+  materialName: string;
+  area: number;
   rateLow: number;
   rateHigh: number;
+  subtotalLow: number;
+  subtotalHigh: number;
+  isRange: boolean;
+}
+
+/** Resolve a material's display name from a section + the price list. */
+export function sectionMaterialName(
+  section: Section,
+  materialName: (id: string) => string | undefined,
+): string {
+  if (section.materialId) return materialName(section.materialId) ?? section.customMaterialName;
+  return section.customMaterialName;
+}
+
+/** Turn each section into a priced line item. */
+export function sectionLines(
+  sections: Section[],
+  materialName: (id: string) => string | undefined,
+): SectionLine[] {
+  return sections.map((s, i) => {
+    const area = totalSqft(s.rows);
+    const subtotalLow = area * s.rateLow;
+    const subtotalHigh = area * s.rateHigh;
+    return {
+      id: s.id,
+      name: s.name.trim() || `Section ${i + 1}`,
+      materialName: sectionMaterialName(s, materialName),
+      area,
+      rateLow: s.rateLow,
+      rateHigh: s.rateHigh,
+      subtotalLow,
+      subtotalHigh,
+      isRange: Math.abs(subtotalHigh - subtotalLow) > 1e-9,
+    };
+  });
+}
+
+export interface QuoteTotals {
+  totalSqft: number;
   subtotalLow: number;
   subtotalHigh: number;
   contingencyLow: number;
@@ -26,16 +70,15 @@ export interface QuoteTotals {
   isRange: boolean;
 }
 
+/** Sum the section lines and apply job-wide contingency + HST once. */
 export function computeQuote(
-  rows: MeasurementRow[],
-  rateLow: number,
-  rateHigh: number,
+  lines: SectionLine[],
   contingencyPct: number,
   hstPct: number,
 ): QuoteTotals {
-  const area = totalSqft(rows);
-  const subtotalLow = area * rateLow;
-  const subtotalHigh = area * rateHigh;
+  const totalSqftValue = lines.reduce((sum, l) => sum + l.area, 0);
+  const subtotalLow = lines.reduce((sum, l) => sum + l.subtotalLow, 0);
+  const subtotalHigh = lines.reduce((sum, l) => sum + l.subtotalHigh, 0);
 
   const contingencyLow = subtotalLow * (contingencyPct / 100);
   const contingencyHigh = subtotalHigh * (contingencyPct / 100);
@@ -47,9 +90,7 @@ export function computeQuote(
   const hstHigh = baseHigh * (hstPct / 100);
 
   return {
-    totalSqft: area,
-    rateLow,
-    rateHigh,
+    totalSqft: totalSqftValue,
     subtotalLow,
     subtotalHigh,
     contingencyLow,
@@ -58,7 +99,7 @@ export function computeQuote(
     hstHigh,
     grandLow: baseLow + hstLow,
     grandHigh: baseHigh + hstHigh,
-    isRange: Math.abs(rateHigh - rateLow) > 1e-9,
+    isRange: Math.abs(subtotalHigh - subtotalLow) > 1e-9,
   };
 }
 
@@ -67,33 +108,41 @@ function span(low: number, high: number, isRange: boolean): string {
   return isRange ? `${money(low)} – ${money(high)}` : money(low);
 }
 
-/** Build a clean plain-text quote suitable for the clipboard. */
+/** Per-section rate, collapsed when low === high. */
+function rateStr(low: number, high: number): string {
+  return Math.abs(high - low) > 1e-9 ? `${fmtRate(low)}–${fmtRate(high)}` : fmtRate(low);
+}
+
+/** Build a clean plain-text quote (with a section breakdown) for the clipboard. */
 export function quoteText(
-  materialName: string,
+  lines: SectionLine[],
   q: QuoteTotals,
   contingencyPct: number,
   hstPct: number,
 ): string {
-  const lines: string[] = [];
-  lines.push("DREAM BUILD GROUP — MATERIAL QUOTE");
-  lines.push("");
-  lines.push(`Work / material: ${materialName || "(not specified)"}`);
-  lines.push(`Total area: ${sqft(q.totalSqft)} sq ft`);
-  lines.push(
-    `Rate: ${q.isRange ? `${fmtRate(q.rateLow)} – ${fmtRate(q.rateHigh)}` : fmtRate(q.rateLow)} / sq ft`,
-  );
-  lines.push(
-    `Subtotal: ${sqft(q.totalSqft)} sq ft × ${q.isRange ? `${fmtRate(q.rateLow)}–${fmtRate(q.rateHigh)}` : fmtRate(q.rateLow)} = ${span(q.subtotalLow, q.subtotalHigh, q.isRange)}`,
-  );
+  const out: string[] = [];
+  out.push("DREAM BUILD GROUP — MATERIAL QUOTE");
+  out.push("");
+
+  for (const l of lines) {
+    out.push(`${l.name}${l.materialName ? ` — ${l.materialName}` : ""}`);
+    out.push(
+      `  ${sqft(l.area)} sq ft × ${rateStr(l.rateLow, l.rateHigh)} = ${span(l.subtotalLow, l.subtotalHigh, l.isRange)}`,
+    );
+  }
+  out.push("");
+
+  out.push(`Total area: ${sqft(q.totalSqft)} sq ft`);
+  out.push(`Subtotal: ${span(q.subtotalLow, q.subtotalHigh, q.isRange)}`);
   if (contingencyPct > 0) {
-    lines.push(
+    out.push(
       `Contingency (${contingencyPct}%): ${span(q.contingencyLow, q.contingencyHigh, q.isRange)}`,
     );
   }
-  lines.push(`HST (${hstPct}%): ${span(q.hstLow, q.hstHigh, q.isRange)}`);
-  lines.push("");
-  lines.push(`GRAND TOTAL: ${span(q.grandLow, q.grandHigh, q.isRange)}`);
-  lines.push("");
-  lines.push("Prices are estimates and subject to site conditions.");
-  return lines.join("\n");
+  out.push(`HST (${hstPct}%): ${span(q.hstLow, q.hstHigh, q.isRange)}`);
+  out.push("");
+  out.push(`GRAND TOTAL: ${span(q.grandLow, q.grandHigh, q.isRange)}`);
+  out.push("");
+  out.push("Prices are estimates and subject to site conditions.");
+  return out.join("\n");
 }

@@ -34,14 +34,18 @@ export interface MeasurementRow {
 export type RateBasis = "installed" | "material";
 
 /**
- * The full calculator session, persisted so the contractor can close the tab
- * mid-job and pick up where they left off.
+ * One area of a job — e.g. "Washroom", "Living room" — with its own
+ * measurements, chosen material, and rate. A full-house quote is a list of
+ * these, each priced independently and then summed.
  *
- * rateLow/rateHigh are the actual per-sq-ft rate used in the quote. Picking a
- * material or switching the basis populates them; the user can then edit them
+ * rateLow/rateHigh are the actual per-sq-ft rate used for this section. Picking
+ * a material or switching the basis populates them; the user can then edit them
  * freely, so they double as the manual-override mechanism.
  */
-export interface SessionState {
+export interface Section {
+  id: string;
+  /** User-facing label, e.g. "Living room". May be blank while editing. */
+  name: string;
   rows: MeasurementRow[];
   materialId: string | null;
   /** Free-text label when the chosen work isn't in the price list. */
@@ -49,6 +53,15 @@ export interface SessionState {
   rateBasis: RateBasis;
   rateLow: number;
   rateHigh: number;
+}
+
+/**
+ * The full calculator session, persisted so the contractor can close the tab
+ * mid-job and pick up where they left off. Contingency and HST apply once to
+ * the whole quote, after every section subtotal is summed.
+ */
+export interface SessionState {
+  sections: Section[];
   contingencyPct: number;
   hstPct: number;
 }

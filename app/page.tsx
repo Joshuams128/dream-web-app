@@ -2,24 +2,31 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { Material, RateBasis, SessionState } from "@/lib/types";
-import { getMaterials, saveMaterials, getSession, saveSession } from "@/lib/store";
-import MeasurementRows, { makeRow } from "@/components/MeasurementRows";
-import MaterialPicker from "@/components/MaterialPicker";
-import RateControls from "@/components/RateControls";
+import type { Material, Section, SessionState } from "@/lib/types";
+import { getMaterials, saveMaterials, getSession, saveSession, newId } from "@/lib/store";
+import { makeRow } from "@/components/MeasurementRows";
+import SectionCard from "@/components/SectionCard";
 import QuoteSummary from "@/components/QuoteSummary";
 import ScanModal from "@/components/ScanModal";
 import InvoiceModal from "@/components/InvoiceModal";
-import { totalSqft } from "@/lib/quote";
+import { sectionLines } from "@/lib/quote";
 
-function defaultSession(): SessionState {
+function makeSection(name = ""): Section {
   return {
+    id: newId("sec"),
+    name,
     rows: [makeRow()],
     materialId: null,
     customMaterialName: "",
     rateBasis: "installed",
     rateLow: 0,
     rateHigh: 0,
+  };
+}
+
+function defaultSession(): SessionState {
+  return {
+    sections: [makeSection()],
     contingencyPct: 0,
     hstPct: 13,
   };
@@ -29,7 +36,7 @@ export default function Home() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [session, setSession] = useState<SessionState>(defaultSession);
   const [ready, setReady] = useState(false);
-  const [scanOpen, setScanOpen] = useState(false);
+  const [scanTarget, setScanTarget] = useState<string | null>(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   // Load persisted price list + session on mount (client-only localStorage).
@@ -43,7 +50,7 @@ export default function Home() {
         setSession({
           ...defaultSession(),
           ...saved,
-          rows: saved.rows?.length ? saved.rows : [makeRow()],
+          sections: saved.sections?.length ? saved.sections : [makeSection()],
         });
       }
       setReady(true);
@@ -60,41 +67,42 @@ export default function Home() {
 
   const patch = (p: Partial<SessionState>) => setSession((s) => ({ ...s, ...p }));
 
-  const selectedMaterial = session.materialId
-    ? materials.find((m) => m.id === session.materialId) ?? null
-    : null;
-  const materialName = selectedMaterial?.name ?? session.customMaterialName;
+  const patchSection = (id: string, p: Partial<Section>) =>
+    setSession((s) => ({
+      ...s,
+      sections: s.sections.map((sec) => (sec.id === id ? { ...sec, ...p } : sec)),
+    }));
 
-  const pickMaterial = (m: Material) =>
-    patch({
-      materialId: m.id,
-      customMaterialName: "",
-      rateBasis: "installed",
-      rateLow: m.installedLow,
-      rateHigh: m.installedHigh,
+  const addSection = () =>
+    setSession((s) => ({ ...s, sections: [...s.sections, makeSection()] }));
+
+  const removeSection = (id: string) =>
+    setSession((s) => {
+      const next = s.sections.filter((sec) => sec.id !== id);
+      return { ...s, sections: next.length ? next : [makeSection()] };
     });
 
-  const onBasis = (b: RateBasis) => {
-    if (!selectedMaterial) return patch({ rateBasis: b });
-    const low = b === "material" ? selectedMaterial.materialLow : selectedMaterial.installedLow;
-    const high = b === "material" ? selectedMaterial.materialHigh : selectedMaterial.installedHigh;
-    patch({ rateBasis: b, rateLow: low, rateHigh: high });
-  };
-
-  const onSaveSuggested = async (m: Material) => {
+  const onAddMaterial = async (m: Material) => {
     const next = [m, ...materials];
     setMaterials(next);
     await saveMaterials(next);
-    pickMaterial(m);
   };
 
   const onScanConfirm = (scanned: ReturnType<typeof makeRow>[]) => {
-    if (scanned.length === 0) return;
-    const existing = session.rows.filter((r) => r.length !== "" || r.width !== "");
-    patch({ rows: [...existing, ...scanned] });
+    if (!scanTarget || scanned.length === 0) return;
+    setSession((s) => ({
+      ...s,
+      sections: s.sections.map((sec) => {
+        if (sec.id !== scanTarget) return sec;
+        const existing = sec.rows.filter((r) => r.length !== "" || r.width !== "");
+        return { ...sec, rows: [...existing, ...scanned] };
+      }),
+    }));
   };
 
   const newQuote = () => setSession(defaultSession());
+
+  const lines = sectionLines(session.sections, (id) => materials.find((m) => m.id === id)?.name);
 
   if (!ready) {
     return (
@@ -131,36 +139,32 @@ export default function Home() {
 
       <div className="space-y-4">
         <div className="no-print space-y-4">
-          <MeasurementRows
-            rows={session.rows}
-            onChange={(rows) => patch({ rows })}
-            onScanClick={() => setScanOpen(true)}
-          />
+          {session.sections.map((sec, i) => (
+            <SectionCard
+              key={sec.id}
+              index={i}
+              section={sec}
+              materials={materials}
+              canRemove={session.sections.length > 1}
+              onPatch={(p) => patchSection(sec.id, p)}
+              onRemove={() => removeSection(sec.id)}
+              onScanClick={() => setScanTarget(sec.id)}
+              onAddMaterial={onAddMaterial}
+            />
+          ))}
 
-          <MaterialPicker
-            materials={materials}
-            materialId={session.materialId}
-            customName={session.customMaterialName}
-            onPick={pickMaterial}
-            onCustomName={(name) => patch({ materialId: null, customMaterialName: name })}
-            onSaveSuggested={onSaveSuggested}
-          />
-
-          <RateControls
-            material={selectedMaterial}
-            rateBasis={session.rateBasis}
-            rateLow={session.rateLow}
-            rateHigh={session.rateHigh}
-            onBasis={onBasis}
-            onRate={(low, high) => patch({ rateLow: low, rateHigh: high })}
-          />
+          <button
+            type="button"
+            onClick={addSection}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-stone-300 text-sm font-semibold text-stone-600 active:bg-stone-50"
+          >
+            <PlusIcon />
+            Add section (room / area)
+          </button>
         </div>
 
         <QuoteSummary
-          materialName={materialName}
-          rows={session.rows}
-          rateLow={session.rateLow}
-          rateHigh={session.rateHigh}
+          lines={lines}
           contingencyPct={session.contingencyPct}
           hstPct={session.hstPct}
           onContingency={(n) => patch({ contingencyPct: n })}
@@ -169,15 +173,16 @@ export default function Home() {
         />
       </div>
 
-      <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} onConfirm={onScanConfirm} />
+      <ScanModal
+        open={scanTarget !== null}
+        onClose={() => setScanTarget(null)}
+        onConfirm={onScanConfirm}
+      />
 
       <InvoiceModal
         open={invoiceOpen}
         onClose={() => setInvoiceOpen(false)}
-        materialName={materialName}
-        totalSqft={totalSqft(session.rows)}
-        rateLow={session.rateLow}
-        rateHigh={session.rateHigh}
+        lines={lines}
         contingencyPct={session.contingencyPct}
         hstPct={session.hstPct}
       />
@@ -190,6 +195,14 @@ function GearIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 5v14M5 12h14" />
     </svg>
   );
 }

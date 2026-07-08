@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Material, Section, SessionState } from "@/lib/types";
 import { getMaterials, saveMaterials, getSession, saveSession, newId } from "@/lib/store";
+import { createClient } from "@/utils/supabase/client";
 import { makeRow } from "@/components/MeasurementRows";
 import SectionCard from "@/components/SectionCard";
 import QuoteSummary from "@/components/QuoteSummary";
@@ -33,11 +35,19 @@ function defaultSession(): SessionState {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [session, setSession] = useState<SessionState>(defaultSession);
   const [ready, setReady] = useState(false);
   const [scanTarget, setScanTarget] = useState<string | null>(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+
+  const signOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.replace("/login");
+    router.refresh();
+  };
 
   // Load persisted price list + session on mount (client-only localStorage).
   useEffect(() => {
@@ -134,6 +144,15 @@ export default function Home() {
           >
             <GearIcon />
           </Link>
+          <button
+            type="button"
+            onClick={signOut}
+            aria-label="Sign out"
+            title="Sign out"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-stone-600 ring-1 ring-stone-200 active:bg-stone-100"
+          >
+            <SignOutIcon />
+          </button>
         </div>
       </header>
 
@@ -203,6 +222,14 @@ function PlusIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+function SignOutIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
     </svg>
   );
 }

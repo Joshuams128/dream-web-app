@@ -73,12 +73,34 @@ Open <http://localhost:3000>.
 
 ### Environment variables
 
-| Variable            | Required | Purpose                                                          |
-| ------------------- | :------: | --------------------------------------------------------------- |
-| `ANTHROPIC_API_KEY` |   Yes    | Used **server-side only** in the `/api` routes. Never sent to the browser. Get one at <https://console.anthropic.com/>. |
+| Variable                        | Required | Purpose                                                          |
+| ------------------------------- | :------: | --------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      |   Yes    | Supabase project URL, e.g. `https://xxxx.supabase.co`. Public (browser). |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` |   Yes    | Supabase **anon / publishable** key (`sb_publishable_…`). Public (browser). **Never** the `service_role` / secret key. |
+| `ANTHROPIC_API_KEY`             |   Yes*   | Used **server-side only** in the `/api` routes. Never sent to the browser. Get one at <https://console.anthropic.com/>. |
 
-The manual calculator, price list, quote, and invoice PDF work **without** a key — only the
-AI features (photo scan, price suggestion, auto-write description, AI notes, auto-price) need it.
+The two `NEXT_PUBLIC_SUPABASE_*` values gate access — the app requires login. \*The
+`ANTHROPIC_API_KEY` is only needed for the AI features (photo scan, price suggestion,
+AI notes/auto-price); the calculator, quote, and invoice PDF work without it.
+
+Find the Supabase values in the dashboard under **Project Settings → API**. Use the
+anon/publishable key — the `service_role` (secret) key must never appear in client code
+or `NEXT_PUBLIC_*` vars.
+
+---
+
+## Authentication (Supabase Auth — email + password)
+
+Single-owner internal tool: there is **no public sign-up**. Create the one login manually in
+the Supabase dashboard (**Authentication → Users → Add user**), and keep public sign-ups
+disabled (**Authentication → Providers → Email → "Enable sign-ups" off**).
+
+- Built on `@supabase/ssr` (browser + server clients in `utils/supabase/`).
+- `proxy.ts` (Next 16's renamed middleware) refreshes the session on every request and
+  redirects any unauthenticated request to `/login`. The token refresh keeps the owner
+  logged in indefinitely until they hit **Sign out** in the header.
+- `/login` is a plain email + password form; wrong credentials show *"Incorrect email or
+  password"*. No sign-up, reset, or OAuth in v1.
 
 ---
 
@@ -87,10 +109,14 @@ AI features (photo scan, price suggestion, auto-write description, AI notes, aut
 1. Push this repo to GitHub.
 2. In Vercel, **Add New → Project** and import the repo (framework auto-detected
    as Next.js).
-3. Under **Settings → Environment Variables**, add `ANTHROPIC_API_KEY`.
+3. Under **Settings → Environment Variables**, add all three, for the **Production**
+   (and Preview) environments:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `ANTHROPIC_API_KEY`
 4. Deploy. The AI routes run as serverless functions (`maxDuration = 60s`).
 
-> The `.env.local` file is git-ignored and never committed — set the key in
+> The `.env.local` file is git-ignored and never committed — set these in
 > Vercel's dashboard, not in code.
 
 ---

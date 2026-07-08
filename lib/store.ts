@@ -120,6 +120,21 @@ export async function saveSession(session: SessionState): Promise<void> {
   write(SESSION_KEY, session);
 }
 
+/**
+ * Drop the saved measurement session. Called on login/logout so one user's
+ * in-progress measurements never carry over to the next person on a shared
+ * device. Only the session is cleared — the price list and business info
+ * (owner data) are left intact.
+ */
+export async function clearSession(): Promise<void> {
+  if (!hasStorage()) return;
+  try {
+    window.localStorage.removeItem(SESSION_KEY);
+  } catch {
+    // Ignore private-mode / quota errors.
+  }
+}
+
 // ---- Business info ---------------------------------------------------------
 
 export async function getBusiness(): Promise<BusinessInfo> {

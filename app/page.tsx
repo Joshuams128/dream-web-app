@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Material, Section, SessionState } from "@/lib/types";
-import { getMaterials, saveMaterials, getSession, saveSession, newId } from "@/lib/store";
+import { getMaterials, saveMaterials, getSession, saveSession, clearSession, newId } from "@/lib/store";
 import { createClient } from "@/utils/supabase/client";
 import { makeRow } from "@/components/MeasurementRows";
 import SectionCard from "@/components/SectionCard";
@@ -45,6 +45,8 @@ export default function Home() {
   const signOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    // Don't leave this user's measurements on a shared device.
+    await clearSession();
     router.replace("/login");
     router.refresh();
   };

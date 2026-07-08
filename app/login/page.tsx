@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { clearSession } from "@/lib/store";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,6 +27,9 @@ export default function LoginPage() {
       setSubmitting(false);
       return;
     }
+    // Fresh start for whoever just logged in: never carry over the previous
+    // user's in-progress measurements on a shared device.
+    await clearSession();
     // Full navigation so the proxy sees the fresh session cookie.
     router.replace("/");
     router.refresh();
